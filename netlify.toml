@@ -1,0 +1,32 @@
+# ============================================================
+# Points — Configuración de Netlify
+# ============================================================
+# Documentación: https://docs.netlify.com/configure-builds/file-based-configuration/
+# ============================================================
+
+[build]
+  # Directorio de publicación (output de Vite)
+  publish = "dist/public"
+  # Comando de build
+  command = "pnpm run build"
+
+# Redirigir todas las rutas al index.html para SPA routing
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+# Headers de seguridad
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection       = "1; mode=block"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
+
+# Cache para assets estáticos
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
