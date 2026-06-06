@@ -1,86 +1,33 @@
-name: Build & Deploy Points App
+name: Build Points App
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-permissions:
-  contents: read
-  actions: read
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    strategy:
-      matrix:
-        node-version: [22.x]
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - uses: actions/checkout@v4
 
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-    - name: Install pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: 10.4.1
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
 
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+      - run: pnpm install
 
-    - name: Setup pnpm cache
-      uses: actions/cache@v3
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
+      - run: pnpm build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
 
-    - name: Install dependencies
-      run: pnpm install --frozen-lockfile
-
-    - name: Type check
-      run: pnpm check
-      continue-on-error: true
-
-    - name: Run tests
-      run: pnpm test
-      continue-on-error: true
-
-    - name: Build project
-      run: pnpm build
-      env:
-        VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-        VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
-        NODE_ENV: production
-
-    - name: Upload build artifacts
-      if: success()
-      uses: actions/upload-artifact@v3
-      with:
-        name: dist
-        path: dist/
-        retention-days: 7
-
-    - name: Build status success
-      if: success()
-      run: echo "✅ Build successful!"
-
-    - name: Build status failed
-      if: failure()
-      run: |
-        echo "❌ Build failed!"
-        exit 1
+      - uses: actions/upload-artifact@v3
+        if: success()
+        with:
+          name: dist
+          path: dist/
