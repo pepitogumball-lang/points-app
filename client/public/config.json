@@ -1,0 +1,4 @@
+{
+  "supabaseUrl": "%VITE_SUPABASE_URL%",
+  "supabaseKey": "%VITE_SUPABASE_KEY%"
+}

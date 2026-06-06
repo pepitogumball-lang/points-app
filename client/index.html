@@ -15,6 +15,25 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Script de inicialización: OBLIGA a usar variables de Supabase -->
+    <script>
+      (function() {
+        const url = '%VITE_SUPABASE_URL%';
+        const key = '%VITE_SUPABASE_KEY%';
+        
+        // Si las variables son placeholders, lanzar error
+        if (!url || url.includes('placeholder') || !key || key.includes('placeholder')) {
+          console.error('[Points] FATAL: Supabase env vars not configured. URL:', url, 'KEY:', key);
+          document.body.innerHTML = '<div style="background:#020617;color:#f87171;font-family:monospace;padding:2rem;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center"><div><h1>⚠️ Configuration Error</h1><p>Supabase credentials not found.</p><p>Contact the administrator.</p></div></div>';
+          throw new Error('Supabase configuration missing');
+        }
+        
+        // Inyectar en window de forma global
+        window.__SUPABASE_URL__ = url;
+        window.__SUPABASE_KEY__ = key;
+        console.log('[Points] Supabase configured successfully');
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <script
       defer

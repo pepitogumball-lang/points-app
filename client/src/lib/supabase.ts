@@ -12,27 +12,82 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY as string;
+let supabaseUrl = '';
+let supabaseKey = '';
 
-if (!supabaseUrl || !supabaseKey) {
-  console.warn(
-    '[Points] Supabase env vars not set. ' +
-    'Set VITE_SUPABASE_URL and VITE_SUPABASE_KEY in your .env file.'
-  );
+// Intentar cargar desde config.json (inyectado por el servidor)
+async function loadConfig() {
+  try {
+    const response = await fetch('/config.json');
+    if (response.ok) {
+      const config = await response.json();
+      supabaseUrl = config.supabaseUrl;
+      supabaseKey = config.supabaseKey;
+      console.log('[Points] Config loaded from /config.json');
+    }
+  } catch (error) {
+    console.error('[Points] Failed to load config.json:', error);
+  }
+
+  // Fallback a import.meta.env
+  if (!supabaseUrl) {
+    supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+  }
+  if (!supabaseKey) {
+    supabaseKey = import.meta.env.VITE_SUPABASE_KEY as string;
+  }
+
+  // Fallback a window global
+  if (!supabaseUrl) {
+    supabaseUrl = (window as any).__SUPABASE_URL__ || '';
+  }
+  if (!supabaseKey) {
+    supabaseKey = (window as any).__SUPABASE_KEY__ || '';
+  }
+
+  // Validar
+  if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder') || supabaseKey.includes('placeholder')) {
+    console.error('[Points] FATAL: Supabase env vars not set or are placeholders');
+    console.error('URL:', supabaseUrl);
+    console.error('KEY:', supabaseKey);
+    throw new Error('Supabase configuration missing or invalid');
+  }
+
+  console.log('[Points] Supabase configured successfully');
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseKey || 'placeholder-key',
-  {
+// Crear cliente (será inicializado después de cargar config)
+let supabaseClient: ReturnType<typeof createClient> | null = null;
+
+export async function initSupabase() {
+  await loadConfig();
+  
+  supabaseClient = createClient(supabaseUrl, supabaseKey, {
     realtime: {
       params: {
         eventsPerSecond: 10,
       },
     },
+  });
+
+  return supabaseClient;
+}
+
+export function getSupabase() {
+  if (!supabaseClient) {
+    throw new Error('Supabase not initialized. Call initSupabase() first.');
   }
-);
+  return supabaseClient;
+}
+
+export const supabase = new Proxy({} as any, {
+  get: (target, prop) => {
+    if (!supabaseClient) {
+      throw new Error('Supabase not initialized');
+    }
+    return (supabaseClient as any)[prop];
+  },
+});
 
 export type PointsRow = {
   id: number;
