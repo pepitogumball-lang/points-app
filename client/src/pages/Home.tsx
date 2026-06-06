@@ -16,11 +16,7 @@ import { motion } from 'framer-motion';
 import { Activity, Wifi, WifiOff } from 'lucide-react';
 
 export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
-
-  const { points, loading, error } = usePoints();
+  const { points, loading: pointsLoading, error: pointsError } = usePoints();
 
   return (
     <div
@@ -109,7 +105,7 @@ export default function Home() {
 
           {/* Counter */}
           <div className="relative z-10">
-            {loading ? (
+            {pointsLoading ? (
               <motion.div
                 animate={{ opacity: [0.3, 0.7, 0.3] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -151,7 +147,7 @@ export default function Home() {
             transition={{ delay: 0.5 }}
             className="flex items-center gap-2 relative z-10"
           >
-            {error ? (
+            {pointsError ? (
               <>
                 <WifiOff size={12} className="text-red-400" />
                 <span
@@ -161,7 +157,7 @@ export default function Home() {
                     color: 'rgba(248,113,113,0.8)',
                   }}
                 >
-                  {error}
+                  {pointsError}
                 </span>
               </>
             ) : (
@@ -179,7 +175,7 @@ export default function Home() {
                     color: 'rgba(6,182,212,0.5)',
                   }}
                 >
-                  {loading ? 'CONECTANDO...' : 'EN VIVO'}
+                  {pointsLoading ? 'CONECTANDO...' : 'EN VIVO'}
                 </span>
               </>
             )}
