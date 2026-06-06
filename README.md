@@ -1118,3 +1118,6 @@ await createInvite.mutateAsync({ eventId: "123", origin: window.location.origin 
 // Backend - use input.origin to build the URL
 const inviteUrl = `${input.origin}/events/${eventId}/join?token=${token}`;
 ```
+
+## GitHub Actions CI/CD
+Build status: [![Build & Deploy Points App](https://github.com/pepitogumball-lang/points-app/actions/workflows/build.yml/badge.svg)](https://github.com/pepitogumball-lang/points-app/actions)
